@@ -1,6 +1,7 @@
 from .a2c import a2c, A2CAtariPreset
 from .c51 import c51, C51AtariPreset
 from .dqn import dqn, DQNAtariPreset
+from .dqn_no_fs import dqn_no_fs, DQNNoFSAtariPreset
 from .ddqn import ddqn, DDQNAtariPreset
 from .ppo import ppo, PPOAtariPreset
 from .rainbow import rainbow, RainbowAtariPreset
@@ -15,6 +16,7 @@ __all__ = [
     "c51",
     "ddqn",
     "dqn",
+    "dqn-no-fs",
     "ppo",
     "rainbow",
     "vac",

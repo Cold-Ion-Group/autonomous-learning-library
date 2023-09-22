@@ -91,7 +91,7 @@ class QlassifierEnvironment(Environment):
 
     def reset(self):
         state = torch.FloatTensor(self.n_layers*4,).uniform_(self.param_lo, self.param_hi)
-        self._state = State(state, self._device)
+        self._state = State(state[None, :], self._device)
         self.best_accuracy = 0
         self.iteration = 0
         self.best_loss = float("inf")
@@ -140,7 +140,7 @@ class QlassifierEnvironment(Environment):
             delta = np.random.random() * action_step_size * action_sign
 
             old_state = self._state.observation
-            state = old_state.detach().clone()
+            state = old_state.detach().clone().squeeze()
             state[param_to_act] += delta
 
         old_best_accuracy = self.best_accuracy
@@ -150,7 +150,7 @@ class QlassifierEnvironment(Environment):
         reward = max(0, accuracy_gain / max_accuracy_gain) * 100
         done = new_accuracy > self.threshold or self.iteration >= self.max_iterations
 
-        self._state = State({'observation': state,
+        self._state = State({'observation': state[None, :],
                              'reward': reward,
                              'done': done},
                             self._device)
