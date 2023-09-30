@@ -24,7 +24,7 @@ default_hyperparameters = {
     "lr": 1e-4,
     "eps": 1.5e-4,
     # Training settings
-    "minibatch_size": 32,
+    "minibatch_size": 64,
     "update_frequency": 4,
     "target_update_frequency": 1000,
     # Replay buffer settings
@@ -33,7 +33,7 @@ default_hyperparameters = {
     # Explicit exploration
     "initial_exploration": 1.,
     "final_exploration": 0.01,
-    "final_exploration_step": 250000,
+    "final_exploration_step": 500000,
     "test_exploration": 0.001,
     # Model construction
     "model_constructor": qlassifier_dqn

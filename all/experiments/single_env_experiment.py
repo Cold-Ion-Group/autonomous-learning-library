@@ -80,6 +80,8 @@ class SingleEnvExperiment(Experiment):
 
         # log the results
         self._log_training_episode(returns, fps)
+        if hasattr(self._env, 'get_extra'):
+            self._log_training_episode_extra(self._env.get_extra())
 
         # update experiment state
         self._episode += 1

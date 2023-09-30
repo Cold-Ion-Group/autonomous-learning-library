@@ -65,7 +65,7 @@ def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, lengt
 
 
 class QlassifierEnvironment(Environment):
-    def __init__(self, name, device='cpu', param_range=(-2,5), threshold=0.99, max_iterations=250):
+    def __init__(self, name, device='cpu', param_range=(-2,5), threshold=0.99, max_iterations=500):
 
         # load data
         self.n_layers = int(name[-8])
@@ -74,7 +74,7 @@ class QlassifierEnvironment(Environment):
         self.threshold = threshold
         self.max_iterations = max_iterations
         self.n_states = self.n_layers * 4
-        self.step_size = [0.5, 0.05]
+        self.step_size = [0.5, 0.1, 0.02]
         self.n_actions = self.n_layers * 4 * len(self.step_size) * 2 + 1
         self.accuracies_and_losses = {}
         self.param_lo, self.param_hi = param_range
@@ -91,7 +91,8 @@ class QlassifierEnvironment(Environment):
 
     def reset(self):
         state = torch.FloatTensor(self.n_layers*4,).uniform_(self.param_lo, self.param_hi)
-        self._state = State(state[None, :], self._device)
+        # self._state = State(state[None, :], self._device)
+        self._state = State(state, self._device)
         self.best_accuracy = 0
         self.iteration = 0
         self.best_loss = float("inf")
@@ -99,6 +100,8 @@ class QlassifierEnvironment(Environment):
         accuracy, loss = self.measure(state)
         self.initial_accuracy = accuracy
         self.initial_loss = loss
+        if self.initial_accuracy > 0.5:
+            self.reward = (self.initial_accuracy - 0.5) * 100
         return self._state
 
 
@@ -137,24 +140,43 @@ class QlassifierEnvironment(Environment):
             action_index = action % (len(self.step_size) * 2)
             action_step_size = self.step_size[action_index // len(self.step_size)]
             action_sign = 1 if action_index % 2 == 0 else -1
-            delta = np.random.random() * action_step_size * action_sign
+            delta = np.random.random() * action_step_size * action_sign * 0.2 + action_step_size
 
             old_state = self._state.observation
             state = old_state.detach().clone().squeeze()
             state[param_to_act] += delta
 
+        '''
         old_best_accuracy = self.best_accuracy
         new_accuracy, new_loss = self.measure(state)
         accuracy_gain = new_accuracy - old_best_accuracy
         max_accuracy_gain = 1 - self.initial_accuracy
         reward = max(0, accuracy_gain / max_accuracy_gain) * 100
         done = new_accuracy > self.threshold or self.iteration >= self.max_iterations
+        '''
 
-        self._state = State({'observation': state[None, :],
+        old_best_accuracy = self.best_accuracy
+        new_accuracy, new_loss = self.measure(state)
+        if new_accuracy >= 0.5:
+            accuracy_gain = new_accuracy - max(old_best_accuracy, 0.5)
+            reward = max(0, accuracy_gain) * 100
+        else:
+            reward = 0
+        done = new_accuracy > self.threshold or self.iteration >= self.max_iterations
+        if self.reward > 0:
+            reward += self.reward
+            self.reward = 0
+
+        # print_progress_bar(self.iteration, self.max_iterations, length=20,  suffix=f'old_acc={old_best_accuracy} new_acc={new_accuracy} reward={reward}                    ', printEnd='\r\n')
+
+        self._state = State({'observation': state,
                              'reward': reward,
                              'done': done},
-                            self._device)
+                             self._device)
         return self._state
+
+    def get_extra(self):
+        return {'accuracy': self.best_accuracy}
 
     def render(self, **kwargs):
         raise NotImplementedError

@@ -68,6 +68,10 @@ class Experiment(ABC):
         self._logger.add_eval("returns/max", self._best_returns, step="frame")
         self._logger.add_eval('fps', fps, step="frame")
 
+    def _log_training_episode_extra(self, extra):
+        for k in extra.keys():
+            self._logger.add_eval(k, extra[k], step="frame")
+
     def _log_test_episode(self, episode, returns):
         if not self._quiet:
             print('test episode: {}, returns: {}'.format(episode, returns))

@@ -3,14 +3,13 @@ from all import nn
 
 def qlassifier_dqn(env):
     return nn.Sequential(
-        nn.Conv1d(1, 32, 4, stride=2),
+        nn.Linear(16, 256),
         nn.ReLU(),
-        nn.Conv1d(32, 64, 3, stride=1),
+        nn.Linear(256, 256),
         nn.ReLU(),
-        nn.Conv1d(64, 64, 2, stride=1),
-        nn.ReLU(),
-        nn.Flatten(),
         nn.Linear(256, 512),
+        nn.ReLU(),
+        nn.Linear(512, 512),
         nn.ReLU(),
         nn.Linear0(512, env.action_space.n)
     )
