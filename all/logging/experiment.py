@@ -1,5 +1,6 @@
 
 import os
+import sys
 import csv
 import subprocess
 from datetime import datetime
@@ -27,6 +28,9 @@ class ExperimentLogger(SummaryWriter, Logger):
         else:
             self.env_name = env_name
         current_time = datetime.now().strftime('%Y-%m-%d_%H:%M:%S_%f')
+        if 'win' in sys.platform:
+            self.env_name = env_name.split('/')[-1]
+            current_time = current_time.replace(':', '_').replace('-', '_')
         dir_name = "%s_%s_%s" % (agent_name, COMMIT_HASH, current_time)
         os.makedirs(os.path.join(logdir, dir_name, self.env_name))
         self.log_dir = os.path.join(logdir, dir_name)
