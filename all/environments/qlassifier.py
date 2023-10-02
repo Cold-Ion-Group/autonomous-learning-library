@@ -87,7 +87,7 @@ class QlassifierEnvironment(Environment):
         self._done = True
         self._info = None
         self._device = device
-        self._initial_value = np.random.uniform(self.param_lo, self.param_hi, size=(self.n_layers*4,))
+        self._initial_value = np.random.uniform(self.param_lo, self.param_hi, size=(self.n_layers*4,)).astype(np.float32)
 
 
     def reset(self):
@@ -129,7 +129,7 @@ class QlassifierEnvironment(Environment):
 
     def step(self, action):
         if action == self.n_actions - 1:
-            state = torch.FloatTensor(self.n_layers*4,).uniform_(self.param_lo, self.param_hi)
+            state = torch.from_numpy(np.copy(self._initial_value))
         else:
             '''
                 Action: 0 1 2 3 4 5 | 6 7 8 9 10 11 | ...
