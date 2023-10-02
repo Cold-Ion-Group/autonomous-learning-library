@@ -74,7 +74,7 @@ class QlassifierEnvironment(Environment):
         self.threshold = threshold
         self.max_iterations = max_iterations
         self.n_states = self.n_layers * 4
-        self.step_size = [0.5, 0.1, 0.02]
+        self.step_size = [0.1, 0.01]
         self.n_actions = self.n_layers * 4 * len(self.step_size) * 2 + 1
         self.accuracies_and_losses = {}
         self.param_lo, self.param_hi = param_range
@@ -87,10 +87,11 @@ class QlassifierEnvironment(Environment):
         self._done = True
         self._info = None
         self._device = device
+        self._initial_value = np.random.uniform(self.param_lo, self.param_hi, size=(self.n_layers*4,))
 
 
     def reset(self):
-        state = torch.FloatTensor(self.n_layers*4,).uniform_(self.param_lo, self.param_hi)
+        state = torch.from_numpy(np.copy(self._initial_value))
         # self._state = State(state[None, :], self._device)
         self._state = State(state, self._device)
         self.best_accuracy = 0
@@ -163,7 +164,7 @@ class QlassifierEnvironment(Environment):
         else:
             reward = 0
         done = new_accuracy > self.threshold or self.iteration >= self.max_iterations
-        if self.reward > 0:
+        if hasattr(self, 'reward') and self.reward > 0:
             reward += self.reward
             self.reward = 0
 
