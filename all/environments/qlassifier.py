@@ -74,7 +74,7 @@ class QlassifierEnvironment(Environment):
         self.threshold = threshold
         self.max_iterations = max_iterations
         self.n_states = self.n_layers * 4
-        self.step_size = [0.1, 0.01]
+        self.step_size = [0.1, 0.005]
         self.n_actions = self.n_layers * 4 * len(self.step_size) * 2 + 1
         self.accuracies_and_losses = {}
         self.param_lo, self.param_hi = param_range
@@ -115,15 +115,15 @@ class QlassifierEnvironment(Environment):
             accuracy = ((measurements >= 0.5) == self.training_classes).sum() / len(measurements)
             loss = binary_cross_entropy(self.training_classes, measurements)
             self.accuracies_and_losses[str(param)] = (accuracy, loss)
-            self.iteration += 1
-            if accuracy > self.best_accuracy or loss < self.best_loss:
-                if accuracy > self.best_accuracy:
-                    self.best_accuracy = accuracy
-                if loss < self.best_loss:
-                    self.best_loss = loss
-            suffix = f'accuracy (max): {round(accuracy*1000)/10}% ({round(self.best_accuracy*1000)/10}%)'
-            suffix += f' loss (min): {round(loss*1000)/1000} ({round(self.best_loss*1000)/1000})'
-            print_progress_bar(self.iteration, self.max_iterations, suffix=suffix, length=20, fill = '*')
+        self.iteration += 1
+        if accuracy > self.best_accuracy or loss < self.best_loss:
+            if accuracy > self.best_accuracy:
+                self.best_accuracy = accuracy
+            if loss < self.best_loss:
+                self.best_loss = loss
+        suffix = f'accuracy (max): {round(accuracy*1000)/10}% ({round(self.best_accuracy*1000)/10}%)'
+        suffix += f' loss (min): {round(loss*1000)/1000} ({round(self.best_loss*1000)/1000})'
+        print_progress_bar(self.iteration, self.max_iterations, suffix=suffix, length=20, fill = '*')
         return accuracy, loss
 
 
@@ -141,7 +141,7 @@ class QlassifierEnvironment(Environment):
             action_index = action % (len(self.step_size) * 2)
             action_step_size = self.step_size[action_index // len(self.step_size)]
             action_sign = 1 if action_index % 2 == 0 else -1
-            delta = np.random.random() * action_step_size * action_sign * 0.2 + action_step_size
+            delta = action_step_size * action_sign
 
             old_state = self._state.observation
             state = old_state.detach().clone().squeeze()
@@ -168,7 +168,10 @@ class QlassifierEnvironment(Environment):
             reward += self.reward
             self.reward = 0
 
-        # print_progress_bar(self.iteration, self.max_iterations, length=20,  suffix=f'old_acc={old_best_accuracy} new_acc={new_accuracy} reward={reward}                    ', printEnd='\r\n')
+        if reward > 100:
+            breakpoint()
+
+        # print_progress_bar(self.iteration, self.max_iterations, length=20,  suffix=f'old_acc={old_best_accuracy} new_acc={new_accuracy} reward={reward}                    ', printEnd='\r\n', fill='*')
 
         self._state = State({'observation': state,
                              'reward': reward,
