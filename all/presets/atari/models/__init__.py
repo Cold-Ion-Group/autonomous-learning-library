@@ -1,6 +1,20 @@
 from all import nn
 
 
+def qlassifier_dqn(env):
+    return nn.Sequential(
+        nn.Linear(16, 256),
+        nn.ReLU(),
+        nn.Linear(256, 256),
+        nn.ReLU(),
+        nn.Linear(256, 512),
+        nn.ReLU(),
+        nn.Linear(512, 512),
+        nn.ReLU(),
+        nn.Linear0(512, env.action_space.n)
+    )
+
+
 def nature_dqn(env, frames=4):
     return nn.Sequential(
         nn.Scale(1 / 255),
